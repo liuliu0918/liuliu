@@ -1,0 +1,24 @@
+import pandas as pd
+from mp_api.client import MPRester
+import os
+def get_data(apikey=""):
+    if os.path.exists('./abx3.csv'):
+        return pd.read_csv('./abx3.csv',index_col=0)
+    else:
+        result = []
+        if apikey == "":
+            print('------------  please input your api key!  ---------------')
+        else:
+            m = MPRester(apikey)
+            docs =  m.summary.search(formula='A1B1X3',fields=['formula_pretty','composition','is_gap_direct','band_gap','symmetry','structure'])#指定化学式组成和空间群
+            if len(docs) > 0:
+                tmp_dict = {}
+                for doc in docs:
+                    doc_dict = dict(doc)
+                    doc_dict['spacegroup_number'] = doc.symmetry.number
+                    result.append(doc_dict)
+            
+        data = pd.DataFrame(result)
+        data = data[['formula_pretty','composition','is_gap_direct','band_gap','spacegroup_number','structure']]
+        data.to_csv('./ABX3.csv')
+        return data
